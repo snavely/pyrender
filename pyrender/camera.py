@@ -339,6 +339,7 @@ class IntrinsicsCamera(Camera):
                  fy,
                  cx,
                  cy,
+                 skew=0.0,
                  znear=DEFAULT_Z_NEAR,
                  zfar=DEFAULT_Z_FAR,
                  name=None):
@@ -352,6 +353,7 @@ class IntrinsicsCamera(Camera):
         self.fy = fy
         self.cx = cx
         self.cy = cy
+        self.skew = skew
 
     @property
     def fx(self):
@@ -393,6 +395,16 @@ class IntrinsicsCamera(Camera):
     def cy(self, value):
         self._cy = float(value)
 
+    @property
+    def skew(self):
+        """float : Skew parameter.
+        """
+        return self._skew
+
+    @skew.setter
+    def skew(self, value):
+        self._skew = float(value)
+
     def get_projection_matrix(self, width, height):
         """Return the OpenGL projection matrix for this camera.
 
@@ -408,6 +420,7 @@ class IntrinsicsCamera(Camera):
 
         cx, cy = self.cx, self.cy
         fx, fy = self.fx, self.fy
+        skew = self.skew
         if sys.platform == 'darwin':
             cx = self.cx * 2.0
             cy = self.cy * 2.0
@@ -417,8 +430,9 @@ class IntrinsicsCamera(Camera):
         P = np.zeros((4,4))
         P[0][0] = 2.0 * fx / width
         P[1][1] = 2.0 * fy / height
-        P[0][2] = 1.0 - 2.0 * cx / (width - 0.0)
-        P[1][2] = 2.0 * cy / (height - 0.0) - 1.0
+        P[0][1] = -2.0 * skew / width
+        P[0][2] = 1.0 - 2.0 * cx / width
+        P[1][2] = 2.0 * cy / height - 1.0
         P[3][2] = -1.0
 
         n = self.znear
